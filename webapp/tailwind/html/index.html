@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="flex flex-col h-screen">
+    <nav class="p-1 border-gray-300 border-b-1">nav</nav>
+    <div class="flex flex-row flex-1 overflow-hidden">
+      <aside class="px-1 py-2 border-e-1 border-gray-300 w-20 overflow-auto">
+        aside
+      </aside>
+      <main class="flex-1 p-2 overflow-auto">main</main>
+      <bside
+        id="help-panel"
+        class="bg-gray-100 opacity-0 shadow-inner max-w-0 overflow-hidden transition-all translate-x-full duration-500 ease-in-out transform"
+      >
+        <!-- Inhalt -->
+        <div class="p-4"><h1>Hilfe</h1></div>
+      </bside>
+    </div>
+    <footer class="p-1 border-gray-300 border-t-1">footer</footer>
+    <div
+      id="help-toggle"
+      class="top-2 right-0 z-50 fixed content-center bg-gray-200 hover:bg-amber-300 shadow-lg border border-gray-300 rounded-full w-10 aspect-square text-xl text-center transition-colors duration-200 ease-in-out cursor-pointer"
+    >
+      ?
+    </div>
+  </body>
+  <script>
+    const toggle = document.getElementById("help-toggle");
+    const panel = document.getElementById("help-panel");
+
+    let isOpen = false;
+    let targetY = 8; // Symbol startet oben (top-2)
+    let currentY = 8;
+    let iconHeight = 40;
+    let iconWidth = 40;
+
+    let startZone = window.innerWidth * 0.75; // 3/4 des Bildschirms
+
+    // Initiale Icon-Größe setzen
+    window.addEventListener("load", () => {
+      iconHeight = toggle.offsetHeight || 40;
+      iconWidth = toggle.offsetWidth || 40;
+    });
+
+    // Animation-Loop
+    function animate() {
+      // Animiertes Nachführen
+      currentY += (targetY - currentY) * 0.2;
+      toggle.style.top = `${currentY}px`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    document.addEventListener("mousemove", (e) => {
+      if (isOpen) return;
+
+      // Endzone ist nicht Fensterbreite, sondern Iconmitte am rechten Rand!
+      const endZone = window.innerWidth - iconWidth;
+      const startZone = window.innerWidth * 0.75;
+
+      let progress = 0;
+      if (e.clientX > startZone) {
+        progress = Math.min(1, (e.clientX - startZone) / (endZone - startZone));
+      }
+
+      // Ziel-Mitte ist: bei progress=0 oben (8px), bei progress=1 auf Mausmitte (Y)
+      const minCenter = iconHeight / 2 + 8; // 8px Padding oben
+      const maxCenter = window.innerHeight - iconHeight / 2 - 8;
+      const mouseCenterY = Math.max(minCenter, Math.min(maxCenter, e.clientY));
+
+      const interpolatedCenterY =
+        minCenter + (mouseCenterY - minCenter) * progress;
+      targetY = interpolatedCenterY - iconHeight / 2;
+    });
+
+    toggle.addEventListener("click", () => {
+      isOpen = !isOpen;
+      if (isOpen) {
+        // Panel auf, Symbol als X oben fest
+        panel.classList.remove("max-w-0", "opacity-0", "translate-x-full");
+        panel.classList.add("max-w-md", "opacity-100", "translate-x-0");
+        toggle.textContent = "✕";
+        // Symbol sofort nach oben, Animation übernimmt sanft
+        targetY = 8;
+      } else {
+        // Panel zu, Symbol als ? nach oben
+        panel.classList.add("max-w-0", "opacity-0", "translate-x-full");
+        panel.classList.remove("max-w-md", "opacity-100", "translate-x-0");
+        toggle.textContent = "?";
+        // Symbol fährt wieder nach oben, Animation übernimmt
+        targetY = 8;
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      iconHeight = toggle.offsetHeight || 40;
+      iconWidth = toggle.offsetWidth || 40;
+    });
+  </script>
+</html>
